@@ -1,31 +1,24 @@
 // Support using this crate without the standard library
 #![cfg_attr(not(feature = "std"), no_std)]
+
 // As long as there is a memory allocator, we can still use this crate
 // without the rest of the standard library by using the `alloc` crate
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
 mod error;
-pub use error::{KbsTypesError, Result};
-
 mod hash_algorithm;
+
+pub use error::{KbsTypesError, Result};
 pub use hash_algorithm::HashAlgorithm;
 
 #[cfg(all(feature = "alloc", not(feature = "std")))]
 use alloc::{string::String, vec::Vec};
 use base64::{prelude::BASE64_URL_SAFE_NO_PAD, Engine};
+use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 #[cfg(all(feature = "std", not(feature = "alloc")))]
 use std::string::String;
-
-use serde::{Deserialize, Serialize};
-
-mod tee;
-#[cfg(feature = "tee-sev")]
-pub use tee::sev::{SevChallenge, SevRequest};
-
-#[cfg(feature = "tee-snp")]
-pub use tee::snp::{Error as SnpDecodeError, SnpAttestation};
 
 #[derive(Serialize, Clone, Copy, Deserialize, Debug, Eq, Hash, PartialEq)]
 #[serde(rename_all = "lowercase")]
