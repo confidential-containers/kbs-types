@@ -111,6 +111,16 @@ pub struct CompositeEvidence {
     additional_evidence: String,
 }
 
+/// Initialization data injected from an untrusted host into a TEE guest.
+#[derive(Deserialize, Serialize)]
+pub struct InitData {
+    /// Format that INITDATA body should be deserialized/read to. Dependent on attestation service.
+    pub format: String,
+
+    /// Initialization data contents.
+    pub body: String,
+}
+
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Attestation {
     #[serde(rename = "init-data")]
