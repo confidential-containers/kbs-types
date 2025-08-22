@@ -85,6 +85,20 @@ pub enum TeePubKey {
     },
 }
 
+/// Combined evidence of all TEE devices found within a client.
+#[derive(Deserialize, Serialize)]
+pub struct CompositeEvidence {
+    /// Primary TEE evidence. Deserialization dependent on underlying attestation service.
+    primary_evidence: Value,
+
+    /// Additional evidence for secondary TEE devices within a client. JSON mapping of:
+    ///
+    /// Tee --> (TEE class, TEE evidence)
+    ///
+    /// Represented as string to avoid {de}serialization inconsistencies.
+    additional_evidence: String,
+}
+
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Attestation {
     #[serde(rename = "init-data")]
