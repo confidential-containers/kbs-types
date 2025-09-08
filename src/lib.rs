@@ -30,7 +30,10 @@ pub use tee::snp::{Error as SnpDecodeError, SnpAttestation};
 #[derive(Serialize, Clone, Copy, Deserialize, Debug, Eq, Hash, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum Tee {
+    // Azure CVMs with vTPM attestation
+    #[serde(rename = "az-snp-vtpm")]
     AzSnpVtpm,
+    #[serde(rename = "az-tdx-vtpm")]
     AzTdxVtpm,
     Nvidia,
     Sev,
