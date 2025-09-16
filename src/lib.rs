@@ -104,14 +104,14 @@ pub struct RuntimeData {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CompositeEvidence {
     /// Primary TEE evidence. Deserialization dependent on underlying attestation service.
-    primary_evidence: Value,
+    pub primary_evidence: Value,
 
     /// Additional evidence for secondary TEE devices within a client. JSON mapping of:
     ///
     /// Tee --> (TEE class, TEE evidence)
     ///
     /// Represented as string to avoid {de}serialization inconsistencies.
-    additional_evidence: String,
+    pub additional_evidence: String,
 }
 
 /// Initialization data injected from an untrusted host into a TEE guest.
