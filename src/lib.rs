@@ -31,7 +31,6 @@ pub enum Tee {
     #[serde(rename = "az-tdx-vtpm")]
     AzTdxVtpm,
     Nvidia,
-    Sev,
     Sgx,
     Snp,
     Tdx,
@@ -344,14 +343,14 @@ mod tests {
         let data = r#"
         {
             "version": "0.0.0",
-            "tee": "sev",
+            "tee": "tdx",
             "extra-params": ""
         }"#;
 
         let request: Request = serde_json::from_str(data).unwrap();
 
         assert_eq!(request.version, "0.0.0");
-        assert_eq!(request.tee, Tee::Sev);
+        assert_eq!(request.tee, Tee::Tdx);
         assert_eq!(request.extra_params, "");
     }
 
