@@ -7,7 +7,9 @@ use strum::{AsRefStr, Display, EnumString};
 use alloc::{vec, vec::Vec};
 
 /// Hash algorithms used to calculate runtime/init data binding
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, AsRefStr, Display, EnumString)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Serialize, Deserialize, AsRefStr, Display, EnumString, Default,
+)]
 #[serde(rename_all = "lowercase")]
 pub enum HashAlgorithm {
     #[strum(ascii_case_insensitive)]
@@ -16,6 +18,7 @@ pub enum HashAlgorithm {
 
     #[strum(ascii_case_insensitive)]
     #[strum(serialize = "sha384")]
+    #[default]
     Sha384,
 
     #[strum(ascii_case_insensitive)]
@@ -25,12 +28,6 @@ pub enum HashAlgorithm {
     #[strum(ascii_case_insensitive)]
     #[strum(serialize = "sm3")]
     Sm3,
-}
-
-impl Default for HashAlgorithm {
-    fn default() -> Self {
-        Self::Sha384
-    }
 }
 
 fn hash_reportdata<D: Digest>(material: &[u8]) -> Vec<u8> {
