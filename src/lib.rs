@@ -22,34 +22,51 @@ use serde_json::{Map, Value};
 #[cfg(all(feature = "std", not(feature = "alloc")))]
 use std::string::String;
 
-#[derive(Serialize, Clone, Copy, Deserialize, Debug, Eq, Hash, PartialEq)]
+use strum::{AsRefStr, Display, EnumString};
+
+#[derive(
+    Serialize, Clone, Copy, Deserialize, Debug, Eq, Hash, PartialEq, AsRefStr, Display, EnumString,
+)]
 #[serde(rename_all = "lowercase")]
 pub enum Tee {
     // Azure CVMs with vTPM attestation
     #[serde(rename = "az-snp-vtpm")]
+    #[strum(serialize = "az-snp-vtpm")]
     AzSnpVtpm,
     #[serde(rename = "az-tdx-vtpm")]
+    #[strum(serialize = "az-tdx-vtpm")]
     AzTdxVtpm,
+    #[strum(serialize = "nvidia")]
     Nvidia,
+    #[strum(serialize = "sgx")]
     Sgx,
+    #[strum(serialize = "snp")]
     Snp,
+    #[strum(serialize = "tdx")]
     Tdx,
     // Arm Confidential Compute Architecture
+    #[strum(serialize = "cca")]
     Cca,
     // China Secure Virtualization
+    #[strum(serialize = "csv")]
     Csv,
     // IBM Z Secure Execution
+    #[strum(serialize = "se")]
     Se,
 
     /// Hygon DCU (Deep Computing Unit)
+    #[strum(serialize = "hygondcu")]
     HygonDcu,
 
     // Trusted Platform Module
+    #[strum(serialize = "tpm")]
     Tpm,
 
     // These values are only used for testing an attestation server, and should not
     // be used in an actual attestation scenario.
+    #[strum(serialize = "sample")]
     Sample,
+    #[strum(serialize = "sampledevice")]
     SampleDevice,
 }
 
@@ -638,5 +655,43 @@ mod tests {
         let ear_raw: RawValue = (&tpk).into();
         let json_str = serde_json::to_string(&ear_raw).unwrap();
         assert_eq!(json_str, serde_json::to_string(&tpk).unwrap());
+    }
+
+    #[test]
+    fn tee_as_ref() {
+        assert_eq!(Tee::AzSnpVtpm.as_ref(), "az-snp-vtpm");
+        assert_eq!(Tee::AzTdxVtpm.as_ref(), "az-tdx-vtpm");
+        assert_eq!(Tee::Nvidia.as_ref(), "nvidia");
+        assert_eq!(Tee::Sgx.as_ref(), "sgx");
+        assert_eq!(Tee::Snp.as_ref(), "snp");
+        assert_eq!(Tee::Tdx.as_ref(), "tdx");
+        assert_eq!(Tee::Cca.as_ref(), "cca");
+        assert_eq!(Tee::Csv.as_ref(), "csv");
+        assert_eq!(Tee::Se.as_ref(), "se");
+        assert_eq!(Tee::HygonDcu.as_ref(), "hygondcu");
+        assert_eq!(Tee::Tpm.as_ref(), "tpm");
+        assert_eq!(Tee::Sample.as_ref(), "sample");
+        assert_eq!(Tee::SampleDevice.as_ref(), "sampledevice");
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn tee_from_str() {
+        use std::str::FromStr;
+
+        assert_eq!(Tee::from_str("az-snp-vtpm").unwrap(), Tee::AzSnpVtpm);
+        assert_eq!(Tee::from_str("az-tdx-vtpm").unwrap(), Tee::AzTdxVtpm);
+        assert_eq!(Tee::from_str("nvidia").unwrap(), Tee::Nvidia);
+        assert_eq!(Tee::from_str("sgx").unwrap(), Tee::Sgx);
+        assert_eq!(Tee::from_str("snp").unwrap(), Tee::Snp);
+        assert_eq!(Tee::from_str("tdx").unwrap(), Tee::Tdx);
+        assert_eq!(Tee::from_str("cca").unwrap(), Tee::Cca);
+        assert_eq!(Tee::from_str("csv").unwrap(), Tee::Csv);
+        assert_eq!(Tee::from_str("se").unwrap(), Tee::Se);
+        assert_eq!(Tee::from_str("hygondcu").unwrap(), Tee::HygonDcu);
+        assert_eq!(Tee::from_str("tpm").unwrap(), Tee::Tpm);
+        assert_eq!(Tee::from_str("sample").unwrap(), Tee::Sample);
+        assert_eq!(Tee::from_str("sampledevice").unwrap(), Tee::SampleDevice);
+        Tee::from_str("invalid").unwrap_err();
     }
 }
