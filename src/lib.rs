@@ -76,9 +76,23 @@ pub enum Tee {
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct TeeParameters {
+    pub name: Tee,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub context: Option<Value>,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct TeeTopology {
+    pub primary: TeeParameters,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub additional: Vec<TeeParameters>,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Request {
     pub version: String,
-    pub tee: Tee,
+    pub tees: TeeTopology,
     #[serde(rename = "extra-params")]
     pub extra_params: Value,
 }
@@ -386,14 +400,27 @@ mod tests {
         let data = r#"
         {
             "version": "0.0.0",
-            "tee": "tdx",
+            "tees": {
+                "primary": {
+                    "name": "tdx",
+                    "context": {}
+                },
+                "additional": [
+                    {
+                        "name": "nvidia"
+                    }
+                ]
+            },
             "extra-params": ""
         }"#;
 
         let request: Request = serde_json::from_str(data).unwrap();
 
         assert_eq!(request.version, "0.0.0");
-        assert_eq!(request.tee, Tee::Tdx);
+        assert_eq!(request.tees.primary.name, Tee::Tdx);
+        assert_eq!(request.tees.primary.context, Some(json!({})));
+        assert_eq!(request.tees.additional[0].name, Tee::Nvidia);
+        assert_eq!(request.tees.additional[0].context, None);
         assert_eq!(request.extra_params, "");
     }
 
