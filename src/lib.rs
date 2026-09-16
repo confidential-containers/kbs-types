@@ -15,8 +15,6 @@ pub use hash_algorithm::HashAlgorithm;
 #[cfg(all(feature = "alloc", not(feature = "std")))]
 use alloc::{string::String, vec::Vec};
 use base64::{prelude::BASE64_URL_SAFE_NO_PAD, Engine};
-#[cfg(feature = "std")]
-use ear::{self, RawValue};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 #[cfg(all(feature = "std", not(feature = "alloc")))]
@@ -116,72 +114,6 @@ pub enum TeePubKey {
         #[serde(rename = "pub")]
         public_key: String,
     },
-}
-
-#[cfg(feature = "std")]
-impl From<&TeePubKey> for ear::RawValue {
-    fn from(tpk: &TeePubKey) -> RawValue {
-        let mut map: Vec<(RawValue, RawValue)> = vec![];
-
-        match tpk {
-            TeePubKey::RSA { alg, k_mod, k_exp } => {
-                map.push((
-                    RawValue::String("kty".to_string()),
-                    RawValue::String("RSA".to_string()),
-                ));
-                map.push((
-                    RawValue::String("alg".to_string()),
-                    RawValue::String(alg.clone()),
-                ));
-                map.push((
-                    RawValue::String("n".to_string()),
-                    RawValue::String(k_mod.clone()),
-                ));
-                map.push((
-                    RawValue::String("e".to_string()),
-                    RawValue::String(k_exp.clone()),
-                ));
-            }
-            TeePubKey::EC { crv, alg, x, y } => {
-                map.push((
-                    RawValue::String("kty".to_string()),
-                    RawValue::String("EC".to_string()),
-                ));
-                map.push((
-                    RawValue::String("crv".to_string()),
-                    RawValue::String(crv.clone()),
-                ));
-                map.push((
-                    RawValue::String("alg".to_string()),
-                    RawValue::String(alg.clone()),
-                ));
-                map.push((
-                    RawValue::String("x".to_string()),
-                    RawValue::String(x.clone()),
-                ));
-                map.push((
-                    RawValue::String("y".to_string()),
-                    RawValue::String(y.clone()),
-                ));
-            }
-            TeePubKey::AKP { alg, public_key } => {
-                map.push((
-                    RawValue::String("kty".to_string()),
-                    RawValue::String("AKP".to_string()),
-                ));
-                map.push((
-                    RawValue::String("alg".to_string()),
-                    RawValue::String(alg.clone()),
-                ));
-                map.push((
-                    RawValue::String("pub".to_string()),
-                    RawValue::String(public_key.clone()),
-                ));
-            }
-        }
-
-        RawValue::Map(map)
-    }
 }
 
 /// Data generated during the attestation process between client and server. Relevant only to the
@@ -694,40 +626,6 @@ mod tests {
 
         assert_eq!(info.error_type, "problemtype");
         assert_eq!(info.detail, "problemdetail");
-    }
-
-    #[test]
-    #[cfg(feature = "std")]
-    fn tee_pubkey_ear_json_deserialize() {
-        // RSA key.
-        let tpk = TeePubKey::RSA {
-            alg: "test".to_string(),
-            k_mod: "test".to_string(),
-            k_exp: "test".to_string(),
-        };
-        let ear_raw: RawValue = (&tpk).into();
-        let json_str = serde_json::to_string(&ear_raw).unwrap();
-        assert_eq!(json_str, serde_json::to_string(&tpk).unwrap());
-
-        // EC key.
-        let tpk = TeePubKey::EC {
-            crv: "test".to_string(),
-            alg: "test".to_string(),
-            x: "test".to_string(),
-            y: "test".to_string(),
-        };
-        let ear_raw: RawValue = (&tpk).into();
-        let json_str = serde_json::to_string(&ear_raw).unwrap();
-        assert_eq!(json_str, serde_json::to_string(&tpk).unwrap());
-
-        // AKP key.
-        let tpk = TeePubKey::AKP {
-            alg: "test".to_string(),
-            public_key: "test".to_string(),
-        };
-        let ear_raw: RawValue = (&tpk).into();
-        let json_str = serde_json::to_string(&ear_raw).unwrap();
-        assert_eq!(json_str, serde_json::to_string(&tpk).unwrap());
     }
 
     #[test]
