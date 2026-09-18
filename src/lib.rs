@@ -196,14 +196,31 @@ pub struct RuntimeData {
     pub tee_pubkey: TeePubKey,
 }
 
+/// Evidence for a single TEE device: an explicit, out-of-band format version
+/// alongside the opaque, TEE-specific payload.
+///
+/// The `version` is a sibling of the payload rather than a field embedded in it,
+/// so it can never collide with a TEE-specific key and no payload has to reserve
+/// the name `version`. It is filled by the attester and carried verbatim to the
+/// verifier, which uses it to select how to parse `evidence`.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct VersionedEvidence {
+    /// TEE evidence version.
+    pub version: u8,
+
+    /// The TEE-specific evidence payload. Deserialization dependent on the
+    /// underlying attestation service.
+    pub evidence: Value,
+}
+
 /// Combined evidence of all TEE devices found within a client.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CompositeEvidence {
-    /// Primary TEE evidence. Deserialization dependent on underlying attestation service.
-    pub primary_evidence: Value,
+    /// Primary TEE evidence, with its out-of-band format version.
+    pub primary_evidence: VersionedEvidence,
 
     /// Additional evidence for secondary TEE devices within a client. JSON mapping of:
-    ///
+    /// 
     /// Tee --> (TEE class, TEE evidence)
     ///
     /// Represented as string to avoid {de}serialization inconsistencies.
@@ -578,7 +595,7 @@ mod tests {
                 }
             },
             "tee-evidence": {
-                "primary_evidence": "test_primary_evidence",
+                "primary_evidence": { "version": 0, "evidence": "test_primary_evidence" },
                 "additional_evidence": "test_additional_evidence"
             }
         }"#;
@@ -594,8 +611,9 @@ mod tests {
         assert_eq!(crv, "fakecrv");
         assert_eq!(x, "fakex");
         assert_eq!(y, "fakey");
+        assert_eq!(attestation.tee_evidence.primary_evidence.version, 0);
         assert_eq!(
-            attestation.tee_evidence.primary_evidence,
+            attestation.tee_evidence.primary_evidence.evidence,
             "test_primary_evidence"
         );
         assert_eq!(
@@ -618,7 +636,7 @@ mod tests {
                 }
             },
             "tee-evidence": {
-                "primary_evidence": "test_primary_evidence",
+                "primary_evidence": { "version": 0, "evidence": "test_primary_evidence" },
                 "additional_evidence": "test_additional_evidence"
             }
         }"#;
@@ -634,8 +652,9 @@ mod tests {
         assert_eq!(alg, "fakealgorithm");
         assert_eq!(k_mod, "fakemodulus");
         assert_eq!(k_exp, "fakeexponent");
+        assert_eq!(attestation.tee_evidence.primary_evidence.version, 0);
         assert_eq!(
-            attestation.tee_evidence.primary_evidence,
+            attestation.tee_evidence.primary_evidence.evidence,
             "test_primary_evidence"
         );
         assert_eq!(
@@ -657,7 +676,7 @@ mod tests {
                 }
             },
             "tee-evidence": {
-                "primary_evidence": "test_primary_evidence",
+                "primary_evidence": { "version": 0, "evidence": "test_primary_evidence" },
                 "additional_evidence": "test_additional_evidence"
             }
         }"#;
@@ -672,8 +691,9 @@ mod tests {
         assert_eq!(attestation.runtime_data.nonce, "test_nonce");
         assert_eq!(alg, "fakealgorithm");
         assert_eq!(public_key, "fakepublickey");
+        assert_eq!(attestation.tee_evidence.primary_evidence.version, 0);
         assert_eq!(
-            attestation.tee_evidence.primary_evidence,
+            attestation.tee_evidence.primary_evidence.evidence,
             "test_primary_evidence"
         );
         assert_eq!(
