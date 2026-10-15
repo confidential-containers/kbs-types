@@ -1,6 +1,4 @@
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256, Sha384, Sha512};
-use sm3::Sm3;
 use strum::{AsRefStr, Display, EnumString};
 
 #[cfg(all(feature = "alloc", not(feature = "std")))]
@@ -30,7 +28,8 @@ pub enum HashAlgorithm {
     Sm3,
 }
 
-fn hash_reportdata<D: Digest>(material: &[u8]) -> Vec<u8> {
+#[cfg(feature = "rust-crypto")]
+fn hash_reportdata<D: sha2::Digest>(material: &[u8]) -> Vec<u8> {
     D::new().chain_update(material).finalize().to_vec()
 }
 
@@ -45,7 +44,36 @@ impl HashAlgorithm {
         }
     }
 
+    /// Hash with selected crypto backend.
+    /// rust-crypto takes precedence when enabled.
+    #[cfg(any(feature = "openssl", feature = "rust-crypto"))]
     pub fn digest(&self, material: &[u8]) -> Vec<u8> {
+        #[cfg(feature = "rust-crypto")]
+        {
+            self.digest_rustcrypto(material)
+        }
+        #[cfg(all(feature = "openssl", not(feature = "rust-crypto")))]
+        {
+            self.digest_openssl(material)
+        }
+    }
+
+    #[cfg(all(feature = "openssl", not(feature = "rust-crypto")))]
+    fn digest_openssl(&self, material: &[u8]) -> Vec<u8> {
+        use openssl::hash::{hash, MessageDigest};
+        let md = match self {
+            HashAlgorithm::Sha256 => MessageDigest::sha256(),
+            HashAlgorithm::Sha384 => MessageDigest::sha384(),
+            HashAlgorithm::Sha512 => MessageDigest::sha512(),
+            HashAlgorithm::Sm3 => MessageDigest::sm3(),
+        };
+        hash(md, material).expect("OpenSSL digest failure").to_vec()
+    }
+
+    #[cfg(feature = "rust-crypto")]
+    fn digest_rustcrypto(&self, material: &[u8]) -> Vec<u8> {
+        use sha2::{Sha256, Sha384, Sha512};
+        use sm3::Sm3;
         match self {
             HashAlgorithm::Sha256 => hash_reportdata::<Sha256>(material),
             HashAlgorithm::Sha384 => hash_reportdata::<Sha384>(material),
