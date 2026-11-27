@@ -65,6 +65,11 @@ pub enum Tee {
     #[strum(serialize = "tpm")]
     Tpm,
 
+    /// AWS Nitro Enclaves (attestation document from the Nitro Secure Module)
+    #[serde(rename = "aws-nitro-enclave")]
+    #[strum(serialize = "aws-nitro-enclave")]
+    AwsNitroEnclave,
+
     // These values are only used for testing an attestation server, and should not
     // be used in an actual attestation scenario.
     #[strum(serialize = "sample")]
@@ -644,6 +649,7 @@ mod tests {
         assert_eq!(Tee::Tpm.as_ref(), "tpm");
         assert_eq!(Tee::Sample.as_ref(), "sample");
         assert_eq!(Tee::SampleDevice.as_ref(), "sampledevice");
+        assert_eq!(Tee::AwsNitroEnclave.as_ref(), "aws-nitro-enclave");
     }
 
     #[cfg(feature = "std")]
@@ -666,6 +672,10 @@ mod tests {
         assert_eq!(Tee::from_str("tpm").unwrap(), Tee::Tpm);
         assert_eq!(Tee::from_str("sample").unwrap(), Tee::Sample);
         assert_eq!(Tee::from_str("sampledevice").unwrap(), Tee::SampleDevice);
+        assert_eq!(
+            Tee::from_str("aws-nitro-enclave").unwrap(),
+            Tee::AwsNitroEnclave
+        );
         Tee::from_str("invalid").unwrap_err();
     }
 
@@ -678,5 +688,21 @@ mod tests {
         // "nvidiadpu" is accepted as a deserialization alias
         let deserialized: Tee = serde_json::from_str("\"nvidiadpu\"").unwrap();
         assert_eq!(deserialized, Tee::NvidiaDpu);
+    }
+
+    #[test]
+    fn tee_serde_aws_nitro_enclave() {
+        let serialized = serde_json::to_string(&Tee::AwsNitroEnclave).unwrap();
+        assert_eq!(serialized, "\"aws-nitro-enclave\"");
+
+        let deserialized: Tee = serde_json::from_str("\"aws-nitro-enclave\"").unwrap();
+        assert_eq!(deserialized, Tee::AwsNitroEnclave);
+    }
+
+    #[test]
+    fn parse_request_aws_nitro_enclave() {
+        let data = r#"{"version": "0.4.0", "tee": "aws-nitro-enclave", "extra-params": ""}"#;
+        let request: Request = serde_json::from_str(data).unwrap();
+        assert_eq!(request.tee, Tee::AwsNitroEnclave);
     }
 }
